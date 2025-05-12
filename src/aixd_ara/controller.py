@@ -29,6 +29,8 @@ from aixd.visualisation.plotter import Plotter
 
 from aixd_ara.shallow_objects import dataobjects_from_shallow
 
+from embeddings import embeddings_setup
+
 
 class SessionController(object):
     instances = {}
@@ -42,6 +44,7 @@ class SessionController(object):
         self.samples_per_file = None
         self.model_is_trained = False
         self.requested_designs = None, None, None
+        self.embeddings = None
 
     def reset(self):
         self.project_root = None
@@ -751,6 +754,14 @@ class SessionController(object):
         msg += f"New dataset with {len(df_all)} samples has been created in \
             {os.path.join(root_folder, new_dataset_name)}.\n"
         return {"status": status, "msg": msg}
+
+    def embeddings_setup(self, settings):
+        self.embeddings = embeddings_setup(settings)
+        return {"msg": "Embeddings have been set up."}
+
+    def embeddings_train(self):
+        self.embeddings.train_model()
+        return {"msg": f"{self.embeddings.model} has been fit to data."}
 
 
 # --------------------------------------------------------------
