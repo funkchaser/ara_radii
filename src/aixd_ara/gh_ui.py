@@ -113,3 +113,8 @@ def merge_datasets(session_id, root_folder, new_dataset_name, samples_per_file):
         "samples_per_file": samples_per_file,
     }
     return http_post_request(action="merge_datasets", data=data)
+
+
+def embeddings_setup_and_train(session_id, settings):
+    data = {"session_id": session_id, "settings": settings}
+    return http_post_request(action="embeddings_setup_and_train", data=data)
