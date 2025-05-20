@@ -364,6 +364,16 @@ def embeddings_setup_and_train():
     return response
 
 
+@app.route("/embed_all", methods=["POST"])
+def embed_all():
+    data = json.loads(request.data)
+    sc = SessionController.create(data["session_id"])
+
+    result = sc.embed_all()
+    response = json.dumps(result, cls=DataEncoder)
+    return response
+
+
 @app.route("/shutdown", methods=["GET"])
 def shutdown():
     os.kill(os.getpid(), signal.SIGINT)

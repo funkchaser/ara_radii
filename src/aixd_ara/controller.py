@@ -772,11 +772,27 @@ class SessionController(object):
             datamodule_settings=settings["datamodule_settings"],
         )
 
-        msg += "Embeddings model has been set up."
+        msg += "Embeddings model has been set up"
         emb_model.train(training_settings=settings["training_settings"])
-        msg += "\nEmbeddings model has been fitted to dataset."
+        msg += " and fitted to dataset"
         self.embeddings = emb_model
         return {"msg": msg}
+
+    def embed_all(self):
+        """
+        Passes the entire dataset (~training set) through the embeddings model.
+        Returns embedding vectors and uids.
+        """
+        try:
+            res = self.embeddings.embed()
+            msg = "Embedding pass successful"
+        except Exception as e:
+            msg = "Embedding pass failed: {}".format(e)
+
+        # reformat into a dict with uid:vector as list
+        # res = {uid:vec for uid,vec in zip(res["uids"],res["embvecs"])}
+
+        return {"res": res, "msg": msg}
 
 
 # --------------------------------------------------------------

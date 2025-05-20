@@ -41,14 +41,21 @@ MODEL_MAP = {
 
 PROJECTION_MAP = {"pca": None, "umap": None}
 
-umap_params = {"n_neighbors": 30, "min_dist": 0.0, "metric": "cosine"}
+UMAP_DEFAULT = {"n_neighbors": 30, "min_dist": 0.0, "metric": "cosine"}
+
+SELECTOR_DEFAULT = dict(
+    selector_type="distance",
+    params={"distance_type": "euclidean", "num_positives": 30, "num_negatives": 0, "lambda": None},
+)
 
 
+# TODO: mode to Embeddings class?
 def embeddings_setup(dataset, datamodule_settings, model_type, model_settings):
 
     if model_type in ["switchtab", "contrast_encoder"]:
-        selector_config = SelectorConfig(**datamodule_settings["selector"])
-    datamodule_settings.upadte({"selector_config": selector_config})
+        selector_settings = datamodule_settings["selector"] or SELECTOR_DEFAULT
+        selector_config = SelectorConfig(**selector_settings)
+        datamodule_settings.update({"selector_config": selector_config})
     datamodule = EmbeddingDataModule.from_dataset(dataset=dataset, **datamodule_settings)
 
     model = MODEL_MAP[model_type].from_datamodule(datamodule, **model_settings)
@@ -69,10 +76,11 @@ class Embedding:
 
     def embed(self, input=None):
         if not input:
-            input = self.datamodule.train_dataloader()
+            input = self.datamodule.train_dataloader()  # TODO: use entire dataset instead
         outputs = self.model.predict(input)
-        embeddings = outputs["e_x"]  # TODO: check if this is the same for all model types
-        return embeddings
+        embvecs = outputs["e_x"].numpy().tolist()  # TODO: check if this is the same for all model types
+        uids = outputs["uid"].numpy().tolist()
+        return {"uids": uids, "embvecs": embvecs}
 
     # def project(self, embeddings):
     #     umap_3d = EmbeddingPlotter.reduce(embeddings, dim=3, method="umap", **umap_params)
