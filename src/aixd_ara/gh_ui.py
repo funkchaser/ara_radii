@@ -123,3 +123,8 @@ def embeddings_setup_and_train(session_id, settings):
 def embed_all(session_id):
     data = {"session_id": session_id}
     return http_post_request(action="embed_all", data=data)
+
+
+def vr_generate_representations(session_id, uids):
+    data = {"session_id": session_id, "uids": uids}
+    return http_post_request(action="vr_generate_representations", data=data)

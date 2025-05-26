@@ -374,6 +374,16 @@ def embed_all():
     return response
 
 
+@app.route("/vr_generate_representations", methods=["POST"])
+def vr_generate_representations():
+    data = json.loads(request.data)
+    sc = SessionController.create(data["session_id"])
+
+    result = sc.vr_generate_representations(data["uids"])
+    response = json.dumps(result, cls=DataEncoder)
+    return response
+
+
 @app.route("/shutdown", methods=["GET"])
 def shutdown():
     os.kill(os.getpid(), signal.SIGINT)

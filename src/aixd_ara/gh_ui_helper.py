@@ -3,11 +3,13 @@ import json
 
 import Grasshopper
 import urllib2
+import System
 from System import Convert
 from System import Guid
 from System.Drawing import Bitmap
 from System.Drawing import Size
 from System.IO import MemoryStream
+from Rhino.Geometry import Mesh as rgMesh
 
 from aixd_ara.constants import DEFAULT_PORT
 
@@ -246,3 +248,20 @@ def reformat_request(request_string, variable_types):
             v = recast_type(v, variable_types[k])
         request_dict[k] = v
     return request_dict
+
+
+def mesh2bytes(mesh, file_path):
+    byte_array = Grasshopper.Kernel.GH_Convert.CommonObjectToByteArray(mesh)
+    System.IO.File.WriteAllBytes(file_path, byte_array)
+
+
+def bytes2mesh(file_path):
+    if System.IO.File.Exists(file_path):
+        byte_array = System.IO.File.ReadAllBytes(file_path)
+        mesh = Grasshopper.Kernel.GH_Convert.ByteArrayToCommonObject[rgMesh](byte_array)
+        if isinstance(mesh, rgMesh):
+            return mesh
+        else:
+            TypeError("Converting to Mesh failed.")
+    else:
+        FileExistsError

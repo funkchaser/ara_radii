@@ -141,8 +141,8 @@ class SessionController(object):
         if not samples_per_file:
             samples_per_file = None
 
-        self.dataset.write_data_dp_pa(data_combined=samples, samples_perfile=samples_per_file)
-        return True
+        uids = self.dataset.write_data_dp_pa(data_combined=samples, samples_perfile=samples_per_file)
+        return uids
 
     def getdata_design_parameters(self):
         if not self.dataset:
@@ -771,10 +771,11 @@ class SessionController(object):
             dataset=self.dataset,
             datamodule_settings=settings["datamodule_settings"],
         )
-
+        emb_model.model.save_dir = self.dataset_path
+        emb_model.model.name_proj = self.project_name
         msg += "Embeddings model has been set up"
         emb_model.train(training_settings=settings["training_settings"])
-        msg += " and fitted to dataset"
+        msg += "\nand fitted to dataset"
         self.embeddings = emb_model
         return {"msg": msg}
 
@@ -793,6 +794,9 @@ class SessionController(object):
         # res = {uid:vec for uid,vec in zip(res["uids"],res["embvecs"])}
 
         return {"res": res, "msg": msg}
+
+    def vr_generate_representations(self, uids):
+        pass
 
 
 # --------------------------------------------------------------
