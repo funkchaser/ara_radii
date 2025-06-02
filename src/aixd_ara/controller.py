@@ -29,7 +29,7 @@ from aixd.visualisation.plotter import Plotter
 
 from aixd_ara.shallow_objects import dataobjects_from_shallow
 
-from embeddings import embeddings_setup
+from embeddings import embeddings_setup, Embedding
 
 
 class SessionController(object):
@@ -784,16 +784,34 @@ class SessionController(object):
         Passes the entire dataset (~training set) through the embeddings model.
         Returns embedding vectors and uids.
         """
-        try:
-            res = self.embeddings.embed()
-            msg = "Embedding pass successful"
-        except Exception as e:
-            msg = "Embedding pass failed: {}".format(e)
-
-        # reformat into a dict with uid:vector as list
-        # res = {uid:vec for uid,vec in zip(res["uids"],res["embvecs"])}
-
+        res = self.embeddings.embed()
+        msg = ""
         return {"res": res, "msg": msg}
+
+    def embedding_model_load(self, checkpoint_path, checkpoint_name):
+        error = None
+        if checkpoint_path not in [None, ""]:
+            if not os.path.exists(checkpoint_path):
+                error = f"The given checkpoint path does not exist: {checkpoint_path}"
+                raise ValueError(error)
+        else:
+            # default to the project path
+            checkpoint_path = os.path.join(self.dataset_path, "checkpoints")
+
+        checkpoint_filepath = os.path.join(checkpoint_path, checkpoint_name + ".ckpt")
+        if not os.path.exists(checkpoint_path):
+            error = f"The given checkpoint path does not exist: {checkpoint_filepath}"
+            raise ValueError(error)
+
+        model_type = checkpoint_name.split("_")[1]
+
+        if self.embeddings is None:
+            self.embeddings = Embedding(None, None, None)
+            self.embeddings.datamodule_from_alldataset(self.dataset)
+
+        self.embeddings.load(model_type, checkpoint_filepath)
+
+        return {"msg": error or f"Model loaded from checkpoint: {checkpoint_filepath}"}
 
     def vr_generate_representations(self, uids):
         pass

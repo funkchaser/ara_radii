@@ -374,6 +374,20 @@ def embed_all():
     return response
 
 
+@app.route("/embedding_model_load", methods=["POST"])
+def embedding_model_load():
+    data = request.data
+    data = json.loads(data)
+    session_id = data["session_id"]
+    sc = SessionController.create(session_id)
+
+    checkpoint_path = data["checkpoint_path"]
+    checkpoint_name = data["checkpoint_name"]
+    result = sc.embedding_model_load(checkpoint_path=checkpoint_path, checkpoint_name=checkpoint_name)
+    response = json.dumps(result, cls=DataEncoder)
+    return response
+
+
 @app.route("/vr_generate_representations", methods=["POST"])
 def vr_generate_representations():
     data = json.loads(request.data)
