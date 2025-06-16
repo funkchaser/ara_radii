@@ -172,7 +172,7 @@ def ghparam_get_values(component, compute=False):
 
 
 def sample_summary(sample_dict):
-    txt = ""
+    txt = "UID: {}\n\n".format(sample_dict["uid"])
     txt += "Design Parameters:\n\n"
     for name, values in sample_dict["design_parameters"].items():
         txt += "{}:  {}\n".format(name, values)

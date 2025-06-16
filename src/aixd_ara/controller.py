@@ -533,6 +533,8 @@ class SessionController(object):
         dp_df = self.dataset.design_par.data.iloc[item]  # pd.series
         pa_df = self.dataset.perf_attributes.data.iloc[item]  # pd.series
 
+        uid = int(self.dataset.perf_attributes.data.iloc[item]["uid"])
+
         def _reduce_list(x):
             # if the list has only one element, return the element instead of a list
             if isinstance(x, list):
@@ -540,7 +542,7 @@ class SessionController(object):
                     return x[0]
             return x
 
-        sample = {"design_parameters": {}, "performance_attributes": {}}
+        sample = {"design_parameters": {}, "performance_attributes": {}, "uid": uid}
         for dobj in self.dataset.design_par.dobj_list:
             name = dobj.name
             values = dp_df[dobj.columns_df].values.tolist()
