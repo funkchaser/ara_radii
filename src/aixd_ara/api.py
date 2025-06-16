@@ -419,6 +419,17 @@ def embedding_model_load():
     return response
 
 
+@app.route("/get_property_values", methods=["POST"])
+def get_property_values():
+    data = request.data
+    data = json.loads(data)
+    sc = SessionController.create(data["session_id"])
+
+    result = sc.get_property_values(property_name=data["property_name"], uids=data["uids"])
+    response = json.dumps(result, cls=DataEncoder)
+    return response
+
+
 @app.route("/vr_generate_representations", methods=["POST"])
 def vr_generate_representations():
     data = json.loads(request.data)

@@ -152,6 +152,12 @@ def embedding_model_load(session_id, checkpoint_name, checkpoint_path):
     }
     return http_post_request(action="embedding_model_load", data=data)
 
+
+def get_property_values(session_id, uids, property_name):
+    data = {"session_id": session_id, "property_name": property_name, "uids": uids}
+    return http_post_request(action="get_property_values", data=data)
+
+
 def vr_generate_representations(session_id, uids):
     data = {"session_id": session_id, "uids": uids}
     return http_post_request(action="vr_generate_representations", data=data)

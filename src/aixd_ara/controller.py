@@ -881,6 +881,13 @@ class SessionController(object):
 
         return {"msg": error or f"Model loaded from checkpoint: {checkpoint_filepath}"}
 
+    def get_property_values(self, property_name, uids):
+        if uids is not None:
+            pass  # not implemented
+        else:
+            # if not uids, use the entire dataset
+            pass
+
     def vr_generate_representations(self, uids):
         pass
 
