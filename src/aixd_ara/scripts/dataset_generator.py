@@ -82,10 +82,10 @@ def analysis_callback(ghdoc, dp_samples, pa_names, collect_design_repr):
                     pa_vals = pa_vals[0]  # unpack from list
             pa_dict[pa_name] = pa_vals
 
-            if collect_design_repr:
-                geo = get_design_representations(ghdoc)
-                design_repr.append(geo)
-                print(geo)
+        if collect_design_repr:
+            geo = get_design_representations(ghdoc)
+            design_repr.append(geo)
+            print(geo)
 
         pa_samples.append(pa_dict)
 
