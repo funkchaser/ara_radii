@@ -80,7 +80,8 @@ class Embedding:
         self.model.fit(self.datamodule, **training_settings, name_run=f"embeddings_{self.model.name}")
 
     def datamodule_from_alldataset(self, dataset, batch_size=512):
-        # self.datamodule = EmbeddingDataModule.from_dataset(dataset=dataset, batch_size=batch_size,predict=True) #TODO: fix the problem with transfromation fitting so that we can use this option
+        # TODO: fix the problem with transfromation fitting so that we can use this option
+        # self.datamodule = EmbeddingDataModule.from_dataset(dataset=dataset, batch_size=batch_size,predict=True)
         self.datamodule = EmbeddingDataModule.from_dataset(dataset=dataset, batch_size=batch_size)
 
     def embed(self, input=None):

@@ -419,13 +419,13 @@ def embedding_model_load():
     return response
 
 
-@app.route("/get_property_values", methods=["POST"])
-def get_property_values():
+@app.route("/get_values_by_variable_names", methods=["POST"])
+def get_values_by_variable_names():
     data = request.data
     data = json.loads(data)
     sc = SessionController.create(data["session_id"])
 
-    result = sc.get_property_values(property_name=data["property_name"], uids=data["uids"])
+    result = sc.get_values_by_variable_names(variable_name=data["variable_name"], uids=data["uids"])
     response = json.dumps(result, cls=DataEncoder)
     return response
 

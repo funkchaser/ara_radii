@@ -31,6 +31,7 @@ from aixd.visualisation.plotter import Plotter
 from aixd_ara.shallow_objects import dataobjects_from_shallow
 
 from embeddings import embeddings_setup, Embedding
+from typing import List, Union
 
 
 class SessionController(object):
@@ -881,12 +882,44 @@ class SessionController(object):
 
         return {"msg": error or f"Model loaded from checkpoint: {checkpoint_filepath}"}
 
-    def get_property_values(self, property_name, uids):
-        if uids is not None:
-            pass  # not implemented
-        else:
-            # if not uids, use the entire dataset
-            pass
+    def get_values_by_variable_names(self, variable_name: str, uids: Union[None, List[int]] = None):
+        """
+        Retrieves values of a given variable in the Dataset.
+        If the variable is multi-dimensional, `variable_name` can be either a root name, or a rootname_<index>.
+        In the first case, it will return a list of values for each samples,
+            in the latter: only the value of the indicated component.
+
+        """
+        if not self.dataset:
+            raise ValueError("Dataset is not loaded.")
+        df_all = self.dataset.design_par.data.merge(self.dataset.perf_attributes.data, how="inner", on="uid")
+
+        df_selected_uids = df_all.copy()
+        if uids is not None and len(uids) > 0:
+            df_selected_uids = df_selected_uids[df_selected_uids["uid"].isin(uids)]
+            df_selected_uids = df_selected_uids.set_index("uid").loc[
+                uids
+            ]  # order the rows so that index=uid, in the order given by uids
+
+        colnames = self.dataset.design_par.columns_df + self.dataset.perf_attributes.columns_df
+        dobj_names = self.dataset.design_par.names_list + self.dataset.perf_attributes.names_list
+
+        if variable_name in colnames:
+            # it's either a 1-dim variable or a particular component of a multi-dim variable
+            # --> variable name = exact column name
+            select_cols = [variable_name]
+        elif variable_name in dobj_names:
+            # it must be a root name for a multi-dim variable --> get column names
+            select_cols = self.dataset.get_data_objects_by_name(variable_name)[0].columns_df
+
+        df_selected_vals = df_selected_uids[select_cols]
+
+        uids_list = df_selected_vals.index.tolist()
+        values_list = df_selected_vals.values.tolist()
+        if len(select_cols) == 1:  # unpack values
+            values_list = [v[0] for v in values_list]
+
+        return {"uids": uids_list, "values": values_list}
 
     def vr_generate_representations(self, uids):
         pass
