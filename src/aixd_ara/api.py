@@ -430,6 +430,17 @@ def get_values_by_variable_names():
     return response
 
 
+@app.route("/get_sample_data_by_uid", methods=["POST"])
+def get_sample_data_by_uid():
+    data = request.data
+    data = json.loads(data)
+    sc = SessionController.create(data["session_id"])
+
+    result = sc.get_sample_data_by_uid(uids=data["uids"])
+    response = json.dumps(result, cls=DataEncoder)
+    return response
+
+
 @app.route("/vr_generate_representations", methods=["POST"])
 def vr_generate_representations():
     data = json.loads(request.data)

@@ -158,6 +158,11 @@ def get_values_by_variable_names(session_id, variable_name, uids):
     return http_post_request(action="get_values_by_variable_names", data=data)
 
 
+def get_sample_data_by_uid(session_id, uids):
+    data = {"session_id": session_id, "uids": uids}
+    return http_post_request(action="get_sample_data_by_uid", data=data)
+
+
 def vr_generate_representations(session_id, uids):
     data = {"session_id": session_id, "uids": uids}
     return http_post_request(action="vr_generate_representations", data=data)

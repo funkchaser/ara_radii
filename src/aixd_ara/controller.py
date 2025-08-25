@@ -924,6 +924,33 @@ class SessionController(object):
 
         return {"uids": uids_list, "values": values_list}
 
+    def get_sample_data_by_uid(self, uids: Union[int, List[int]]):
+        """
+        Retrieves the data of one or more samples from the Dataset, given their uid(s).
+        """
+        if not isinstance(uids, list):
+            uids = [uids]
+        if not self.dataset:
+            raise ValueError("Dataset is not loaded.")
+        df_all = self.dataset.design_par.data.merge(self.dataset.perf_attributes.data, how="inner", on="uid")
+        df_selected_uids = df_all.copy()
+        df_selected_uids = df_selected_uids[df_selected_uids["uid"].isin(uids)]
+        df_selected_uids = df_selected_uids.set_index("uid").loc[uids]
+
+        samples_by_uid = []
+        for uid in uids:
+            sample = {"uid": uid}
+            for dictname, dblockname in zip(["DP", "PA"], ["design_par", "perf_attributes"]):
+                dobjlist = self.dataset.__getattribute__(dblockname).dobj_list
+                sample.update({dictname: {}})
+                for dobj in dobjlist:
+                    values = df_selected_uids.loc[uid, dobj.columns_df].values.tolist()
+                    if dobj.dim == 1:
+                        values = values[0]
+                    sample[dictname][dobj.name] = values
+            samples_by_uid.append(sample)
+        return {"samples": samples_by_uid}
+
     def umap(self, dim, settings={}, features=None):
         k_neighbors = settings.get("k_neighbors", 30)
         min_dist = settings.get("min_dist", 0.0)
