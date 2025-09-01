@@ -110,6 +110,7 @@ ENV/
 *.bytes
 
 temp/**
+*(gitignore)*
 !temp/PLACEHOLDER
 
 .DS_Store
