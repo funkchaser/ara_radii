@@ -379,16 +379,6 @@ def local_sensitivity():
     return response
 
 
-@app.route("/embed_all", methods=["POST"])
-def embed_all():
-    data = json.loads(request.data)
-    sc = SessionController.create(data["session_id"])
-
-    result = sc.embed_all()
-    response = json.dumps(result, cls=DataEncoder)
-    return response
-
-
 @app.route("/global_sensitivity", methods=["POST"])
 def global_sensitivity():
     data = request.data
@@ -401,6 +391,26 @@ def global_sensitivity():
         set_name=data["set_name"],
         n_samples=data["n_samples"],
     )
+    response = json.dumps(result, cls=DataEncoder)
+    return response
+
+
+@app.route("/embed_all", methods=["POST"])
+def embed_all():
+    data = json.loads(request.data)
+    sc = SessionController.create(data["session_id"])
+
+    result = sc.embed_all()
+    response = json.dumps(result, cls=DataEncoder)
+    return response
+
+
+@app.route("/vr_generate_representations", methods=["POST"])
+def vr_generate_representations():
+    data = json.loads(request.data)
+    sc = SessionController.create(data["session_id"])
+
+    result = sc.vr_generate_representations(data["uids"])
     response = json.dumps(result, cls=DataEncoder)
     return response
 

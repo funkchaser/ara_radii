@@ -15,6 +15,7 @@ from aixd_ara.gh_ui_helper import find_component_by_nickname
 from aixd_ara.gh_ui_helper import ghparam_get_values
 from aixd_ara.gh_ui_helper import ghparam_set_values
 from aixd_ara.gh_ui_helper import http_post_request
+from aixd_ara.gh_ui_helper import mesh2bytes
 
 
 # --- GRASSHOPPER INTERFACE ----------------------------------------------------------------------------
@@ -43,10 +44,10 @@ def generate_dp_samples(n_samples):
     return http_post_request("generate_dp_samples", {"session_id": session_id, "n_samples": n_samples})
 
 
-def calculate_pa_samples(ghdoc, dp_samples):
+def calculate_pa_samples(ghdoc, dp_samples, collect_design_repr=False):
     pa_names = get_pa_names()
-    pa_samples = analysis_callback(ghdoc, dp_samples, pa_names)
-    return pa_samples
+    pa_samples, design_repr = analysis_callback(ghdoc, dp_samples, pa_names, collect_design_repr)
+    return pa_samples, design_repr
 
 
 def load_dps():
@@ -58,9 +59,10 @@ def get_pa_names():
     return d["performance_attributes"]
 
 
-def analysis_callback(ghdoc, dp_samples, pa_names):
+def analysis_callback(ghdoc, dp_samples, pa_names, collect_design_repr):
 
     pa_samples = []
+    design_repr = []
 
     # pass design parameters (sample by sample) to Grasshopper model and read the performance attributes
     for sample in dp_samples:
@@ -80,9 +82,14 @@ def analysis_callback(ghdoc, dp_samples, pa_names):
                     pa_vals = pa_vals[0]  # unpack from list
             pa_dict[pa_name] = pa_vals
 
+            if collect_design_repr:
+                geo = get_design_representations(ghdoc)
+                design_repr.append(geo)
+                print(geo)
+
         pa_samples.append(pa_dict)
 
-    return pa_samples
+    return pa_samples, design_repr
 
 
 def add_samples_to_dataset(samples, samples_per_file=None):
@@ -102,10 +109,23 @@ def combine_dp_pa(dp_samples, pa_samples):
     return samples
 
 
+def get_design_representations(ghdoc):
+    component_name = "DR_mesh"
+    component = find_component_by_nickname(ghdoc, component_name)
+    geo = ghparam_get_values(component, compute=True)
+    return geo
+
+
+def save_design_repr(geo, uids, folder):
+    for mesh, uid in zip(geo, uids):
+        file_path = os.path.join(folder, "mesh_{:04d}.bytes".format(uid))
+        mesh2bytes(mesh[0], file_path)
+
+
 # --- MAIN ----------------------------------------------------------------------------
 
 
-def run(session_id, num_samples, num_samples_per_batch):
+def run(session_id, num_samples, num_samples_per_batch, save_meshes):
 
     num_batches = int(math.ceil(num_samples / num_samples_per_batch))
 
@@ -116,6 +136,9 @@ def run(session_id, num_samples, num_samples_per_batch):
     project_root = pr["project_root"]
     project_name = pr["project_name"]
     target_path = os.path.join(project_root, project_name)
+    design_repr_path = os.path.join(target_path, "meshes")
+    if not os.path.exists(design_repr_path):
+        os.makedirs(design_repr_path)
 
     print(
         "\t ({} samples in {} batches will be generated and saved in {})".format(num_samples, num_batches, target_path)
@@ -123,9 +146,12 @@ def run(session_id, num_samples, num_samples_per_batch):
 
     for _ in range(num_batches):
         dp_samples = generate_dp_samples(num_samples_per_batch)
-        pa_samples = calculate_pa_samples(ghdoc, dp_samples)
+        pa_samples, design_repr = calculate_pa_samples(ghdoc, dp_samples, collect_design_repr=True)
         samples = combine_dp_pa(dp_samples, pa_samples)
-        add_samples_to_dataset(samples, num_samples_per_batch)
+
+        uids = add_samples_to_dataset(samples, num_samples_per_batch)
+        if save_meshes:
+            save_design_repr(design_repr, uids, design_repr_path)
 
     print("\t successfully generated all {} samples in {} batch files".format(num_samples, num_batches))
 
@@ -139,10 +165,11 @@ def get_user_input():
     num_samples_per_batch = rs.GetInteger(
         "Number of samples per batch file: ", number=num_samples / 10, minimum=1, maximum=num_samples
     )
-    return num_samples, num_samples_per_batch
+    save_meshes = rs.GetBoolean("Save meshes?", items=(("Save", "True", "False"),), defaults=(True,))
+    return num_samples, num_samples_per_batch, save_meshes
 
 
 if __name__ == "__main__":
 
-    num_samples, num_samples_per_batch = get_user_input()
-    run(session_id, num_samples, num_samples_per_batch)
+    num_samples, num_samples_per_batch, save_meshes = get_user_input()
+    run(session_id, num_samples, num_samples_per_batch, save_meshes)

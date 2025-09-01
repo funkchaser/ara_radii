@@ -56,7 +56,10 @@ def embeddings_setup(dataset, datamodule_settings, model_type, model_settings):
         selector_settings = datamodule_settings["selector"] or SELECTOR_DEFAULT
         selector_config = SelectorConfig(**selector_settings)
         datamodule_settings.update({"selector_config": selector_config})
-    datamodule = EmbeddingDataModule.from_dataset(dataset=dataset, **datamodule_settings)
+        datamodule_settings = {
+            k: v for k, v in datamodule_settings.items() if k != "selector"
+        }  # remove the selector key, since it's replaced with the 'selector_config'
+    datamodule = EmbeddingDataModule.from_dataset(dataset=dataset, **datamodule_settings)  # , split_ratios=[1.0,0,0])
 
     model = MODEL_MAP[model_type].from_datamodule(datamodule, **model_settings)
 
@@ -72,7 +75,7 @@ class Embedding:
         self.projection = projection  # unused
 
     def train(self, training_settings):
-        self.model.fit(self.datamodule, **training_settings)
+        self.model.fit(self.datamodule, **training_settings, name_run=f"embeddings_{self.model.name}")
 
     def embed(self, input=None):
         if not input:
@@ -89,3 +92,15 @@ class Embedding:
     def embed_and_project(self):
         emb = self.embed()
         return self.project(emb)
+
+
+# def _merge_dataloaders(trainloader, valloader, testloader):
+#     """
+#     dataloaders: list of dataloaders
+#     """
+#     # from: https://stackoverflow.com/questions/65621414/
+#       /how-to-merge-two-torch-utils-data-dataloaders-with-a-single-operation
+#     def itr_merge(*itrs):
+#         for itr in itrs:
+#             for v in itr:
+#                 yield v
