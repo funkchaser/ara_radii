@@ -9,7 +9,26 @@ from aixd.embedding.data.data_loader import EmbeddingDataModule
 from aixd.embedding.data.selector import SelectorConfig
 
 
-from aixd.embedding.visualisation.plotter import EmbeddingPlotter
+"""
+step1: Data --> DataModule, depending on the embeddings model
+* batch_size
+* inputML, outputML - model-specific?
+* use Selector or not
+
+step2: Embeddings model setup:
+* all need inputML,outputML, latent_dim, layer_widths
+* some have additional params
+
+step3: Fit the model
+* max_epochs
+* run model.fit
+
+step4: Get embeddings
+* model.forward() - extract data from dict, model-specific
+
+step5: optional - projection
+"""
+
 
 MODEL_MAP = {
     "autoencoder": AutoEncoder,
@@ -25,30 +44,16 @@ PROJECTION_MAP = {"pca": None, "umap": None}
 umap_params = {"n_neighbors": 30, "min_dist": 0.0, "metric": "cosine"}
 
 
-def embeddings_setup(dataset, settings):
-    """
-    settings: a dict with :
-        * selector_settings
-        * datamodule_settings
-        * model_type
-        * model_settings (kwargs)
-        * projection_type
-        * projection_settings (kwargs)
+def embeddings_setup(dataset, datamodule_settings, model_type, model_settings):
 
-    return: some object that later consumes the data and returns embedded data
-    """
-    # TODO: replace with kwargs 'selector_settings'
-    selector_config = SelectorConfig(
-        selector_type="distance",
-        params={"distance_type": "euclidean", "num_positives": 30, "num_negatives": 0, "lambda": None},
-    )
-    # TODO: replace with kwargs 'datamodule_settings'
-    datamodule = EmbeddingDataModule.from_dataset(dataset, batch_size=1024, selector_config=selector_config)
+    if model_type in ["switchtab", "contrast_encoder"]:
+        selector_config = SelectorConfig(**datamodule_settings["selector"])
+    datamodule_settings.upadte({"selector_config": selector_config})
+    datamodule = EmbeddingDataModule.from_dataset(dataset=dataset, **datamodule_settings)
 
-    model = MODEL_MAP[settings["model_type"]].from_datamodule(datamodule=datamodule, **settings["model_settings"])
+    model = MODEL_MAP[model_type].from_datamodule(datamodule, **model_settings)
 
-    projection = None  # PROJECTION_MAP[settings['projection_type']](**settings['projection_settings'])
-
+    projection = None
     emb = Embedding(datamodule=datamodule, model=model, projection=projection)
     return emb
 
@@ -59,9 +64,8 @@ class Embedding:
         self.model = model
         self.projection = projection  # unused
 
-    def train_model(self):
-        # TODO: replace settings with kwargs
-        self.model.fit(self.datamodule, max_epochs=50, flag_early_stop=True)
+    def train(self, training_settings):
+        self.model.fit(self.datamodule, **training_settings)
 
     def embed(self, input=None):
         if not input:
@@ -70,9 +74,9 @@ class Embedding:
         embeddings = outputs["e_x"]  # TODO: check if this is the same for all model types
         return embeddings
 
-    def project(self, embeddings):
-        umap_3d = EmbeddingPlotter.reduce(embeddings, dim=3, method="umap", **umap_params)
-        return umap_3d
+    # def project(self, embeddings):
+    #     umap_3d = EmbeddingPlotter.reduce(embeddings, dim=3, method="umap", **umap_params)
+    #     return umap_3d
 
     def embed_and_project(self):
         emb = self.embed()

@@ -344,18 +344,22 @@ def model_input_output_dimensions():
     return response
 
 
-@app.route("/merge_datasets", methods=["POST"])
-def merge_datasets():
-    data = request.data
-    data = json.loads(data)
-    session_id = data["session_id"]
-    sc = SessionController.create(session_id)
+# @app.route("/embeddings_setup", methods=['POST'])
+# def embeddints_setup():
+#     data = json.loads(request.data)
+#     sc = SessionController.create(data['session_id'])
 
-    result = sc.merge_datasets(
-        root_folder=data["root_folder"],
-        new_dataset_name=data["new_dataset_name"],
-        samples_per_file=data["samples_per_file"],
-    )
+#     result = sc.embeddings_setup(data['settings'])
+#     response = json.dumps(result,cls=DataEncoder)
+#     return response
+
+
+@app.route("/embeddings_setup_and_train", methods=["POST"])
+def embeddings_setup_and_train():
+    data = json.loads(request.data)
+    sc = SessionController.create(data["session_id"])
+
+    result = sc.embeddings_setup_and_train(data["settings"])
     response = json.dumps(result, cls=DataEncoder)
     return response
 

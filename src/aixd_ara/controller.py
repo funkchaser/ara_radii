@@ -757,7 +757,6 @@ class SessionController(object):
             {os.path.join(root_folder, new_dataset_name)}.\n"
         return {"status": status, "msg": msg}
 
-<<<<<<< HEAD
     def local_sensitivity(self, test_point, performance_attribute_name):
         """
         Plots a local sensitivity of the given performance attribute with respect to inputs, at the given test point.
@@ -823,15 +822,29 @@ class SessionController(object):
 
         x_tensor = torch.tensor(data, dtype=torch.float)
         global_sensitivity.plot(data=x_tensor, features=[performance_attribute_name], renderer="browser")
-=======
-    def embeddings_setup(self, settings):
-        self.embeddings = embeddings_setup(settings)
-        return {"msg": "Embeddings have been set up."}
 
-    def embeddings_train(self):
-        self.embeddings.train_model()
-        return {"msg": f"{self.embeddings.model} has been fit to data."}
->>>>>>> f7a02f4 (#2 wip wrappers for interfacing with embeddings)
+    # def embeddings_setup(self, settings):
+    #     self.embeddings = embeddings_setup(settings)
+    #     return {"msg": "Embeddings have been set up."}
+
+    # def embeddings_train(self):
+    #     self.embeddings.train_model()
+    #     return {"msg": f"{self.embeddings.model} has been fit to data."}
+
+    def embeddings_setup_and_train(self, settings):
+        msg = ""
+        emb_model = embeddings_setup(
+            model_type=settings["model_type"],
+            model_settings=settings["model_settings"],
+            dataset=self.dataset,
+            datamodule_settings=settings["datamodule_settings"],
+        )
+
+        msg += "Embeddings model has been set up."
+        emb_model.train(training_settings=settings["training_settings"])
+        msg += "\nEmbeddings model has been fitted to dataset."
+        self.embeddings = emb_model
+        return {"msg": msg}
 
 
 # --------------------------------------------------------------

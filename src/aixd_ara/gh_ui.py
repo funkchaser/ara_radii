@@ -132,3 +132,8 @@ def global_sensitivity(session_id, performance_attribute_name, set_name, n_sampl
         "n_samples": n_samples,
     }
     return http_post_request(action="global_sensitivity", data=data)
+
+
+def embeddings_setup_and_train(session_id, settings):
+    data = {"session_id": session_id, "settings": settings}
+    return http_post_request(action="embeddings_setup_and_train", data=data)
