@@ -73,13 +73,20 @@ class Embedding:
         self.datamodule = datamodule
         self.model = model
         self.projection = projection  # unused
+        self.embedded_vectors = None
+        self.embedded_uids = None
 
     def train(self, training_settings):
         self.model.fit(self.datamodule, **training_settings, name_run=f"embeddings_{self.model.name}")
 
+    def datamodule_from_alldataset(self, dataset, batch_size=512):
+        # self.datamodule = EmbeddingDataModule.from_dataset(dataset=dataset, batch_size=batch_size,predict=True) #TODO: fix the problem with transfromation fitting so that we can use this option
+        self.datamodule = EmbeddingDataModule.from_dataset(dataset=dataset, batch_size=batch_size)
+
     def embed(self, input=None):
         if not input:
-            input = self.datamodule.train_dataloader()  # TODO: use entire dataset instead
+            # input = self.datamodule._predict_data  # TODO: works only if datamodule createe with predict=True
+            input = self.datamodule.train_dataloader()
         outputs = self.model.predict(input)
         embvecs = outputs["e_x"].numpy().tolist()  # TODO: check if this is the same for all model types
         uids = outputs["uid"].numpy().tolist()
@@ -89,9 +96,19 @@ class Embedding:
     #     umap_3d = EmbeddingPlotter.reduce(embeddings, dim=3, method="umap", **umap_params)
     #     return umap_3d
 
-    def embed_and_project(self):
-        emb = self.embed()
-        return self.project(emb)
+    # def embed_and_project(self):
+    #     emb = self.embed()
+    #     return self.project(emb)
+
+    def load(self, model_type, checkpoint_filepath):
+        map = {
+            "AutoEncoder": AutoEncoder,
+            "SparseAutoEncoder": SparseAutoEncoder,
+            "CLIPEncoder": CLIPEncoder,
+            "SwitchTab": SwitchTab,
+        }
+        self.model = map[model_type].load_model_from_checkpoint(checkpoint_filepath)
+        return self.model
 
 
 # def _merge_dataloaders(trainloader, valloader, testloader):
