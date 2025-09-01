@@ -440,7 +440,15 @@ def vr_generate_representations():
     return response
 
 
-# --- server routes ---
+@app.route("/umap", methods=["POST"])
+def umap():
+    data = request.data
+    data = json.loads(data)
+    sc = SessionController.create(data["session_id"])
+
+    result = sc.umap(dim=data["dim"], settings=data["settings"], features=data["features"])
+    response = json.dumps(result, cls=DataEncoder)
+    return response
 
 
 @app.route("/shutdown", methods=["GET"])

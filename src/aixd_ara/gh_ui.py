@@ -161,3 +161,8 @@ def get_values_by_variable_names(session_id, variable_name, uids):
 def vr_generate_representations(session_id, uids):
     data = {"session_id": session_id, "uids": uids}
     return http_post_request(action="vr_generate_representations", data=data)
+
+
+def umap(session_id, dim, settings, features):
+    data = {"session_id": session_id, "dim": dim, "settings": settings, "features": features}
+    return http_post_request(action="umap", data=data)

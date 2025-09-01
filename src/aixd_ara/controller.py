@@ -32,6 +32,7 @@ from aixd_ara.shallow_objects import dataobjects_from_shallow
 
 from embeddings import embeddings_setup, Embedding
 from typing import List, Union
+import umap
 
 
 class SessionController(object):
@@ -923,8 +924,28 @@ class SessionController(object):
 
         return {"uids": uids_list, "values": values_list}
 
-    def vr_generate_representations(self, uids):
-        pass
+    def umap(self, dim, settings={}, features=None):
+        k_neighbors = settings.get("k_neighbors", 30)
+        min_dist = settings.get("min_dist", 0.0)
+        metric = settings.get("metric", "cosine")
+
+        datamodule = DataModule.from_dataset(self.dataset, input_ml_names=features, output_ml_names=[])
+
+        if features is None:
+            # use all features from the dataset
+            features = self.dataset.design_par.names_list + self.dataset.perf_attributes.names_list
+
+        # we will not use the output_ml_names (passing none will still create a DataBlock though)
+        datamodule = DataModule.from_dataset(self.dataset, input_ml_names=features, output_ml_names=[])
+        data = datamodule.x
+
+        if data.shape[-1] < 2:
+            raise ValueError("UMAP requires at least 2 dimensions in the input data.")
+
+        reducer = umap.UMAP(n_components=dim, n_neighbors=k_neighbors, min_dist=min_dist, metric=metric)
+        embeddings = reducer.fit_transform(data)
+        uids = self.dataset.design_par.data["uid"].values
+        return {"uids": uids, "embeddings": embeddings}
 
 
 # --------------------------------------------------------------
