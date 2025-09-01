@@ -379,6 +379,16 @@ def local_sensitivity():
     return response
 
 
+@app.route("/embed_all", methods=["POST"])
+def embed_all():
+    data = json.loads(request.data)
+    sc = SessionController.create(data["session_id"])
+
+    result = sc.embed_all()
+    response = json.dumps(result, cls=DataEncoder)
+    return response
+
+
 @app.route("/global_sensitivity", methods=["POST"])
 def global_sensitivity():
     data = request.data
