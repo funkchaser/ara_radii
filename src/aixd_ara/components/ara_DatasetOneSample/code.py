@@ -9,9 +9,6 @@ from aixd_ara.gh_ui_helper import session_id
 cid = component_id(session_id(), ghenv.Component, "DatasetOneSample")
 
 
-if item is None:
-    item = -1
-
 if get:
     st[cid] = get_one_sample(session_id(), item)
 
